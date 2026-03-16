@@ -1,0 +1,26 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ
+.idea
+*.iml
+out/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Docker
+docker-data
+
+# Env
+.env
+
+# build
+build/
+
+# temp
+*.tmp
