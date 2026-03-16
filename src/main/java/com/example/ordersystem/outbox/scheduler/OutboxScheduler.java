@@ -1,5 +1,6 @@
 package com.example.ordersystem.outbox.scheduler;
 
+import com.example.ordersystem.messaging.producer.OrderEventProducer;
 import com.example.ordersystem.outbox.entity.OutboxEvent;
 import com.example.ordersystem.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.util.List;
 public class OutboxScheduler {
 
     private final OutboxEventRepository repository;
+    private final OrderEventProducer producer;
 
     @Scheduled(fixedDelay = 5000)
     public void publishEvents() {
@@ -26,7 +28,8 @@ public class OutboxScheduler {
 
             log.info("Publishing event {}", event.getEventType());
 
-            // тут будет Kafka producer
+            // Kafka producer
+            producer.sendOrderCreated(event.getPayload());
 
             event.setPublished(true);
             repository.save(event);
