@@ -1,12 +1,14 @@
 package com.example.ordersystem.outbox.scheduler;
 
-import com.example.ordersystem.messaging.producer.OrderEventProducer;
 import com.example.ordersystem.outbox.entity.OutboxEvent;
 import com.example.ordersystem.outbox.repository.OutboxEventRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,9 +18,11 @@ import java.util.List;
 public class OutboxScheduler {
 
     private final OutboxEventRepository repository;
-    private final OrderEventProducer producer;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     @Scheduled(fixedDelay = 5000)
+    @Transactional
     public void publishEvents() {
 
         List<OutboxEvent> events =
@@ -27,12 +31,18 @@ public class OutboxScheduler {
         for (OutboxEvent event : events) {
 
             try {
-                producer.sendOrderCreated(event.getPayload());
 
-                event.setPublished(true);
-                repository.save(event);
+                kafkaTemplate.executeInTransaction(operations -> {
 
-                log.info("Event sent to Kafka: {}", event.getEventType());
+                    operations.send("order-created", event.getPayload());
+
+                    event.setPublished(true);
+                    repository.save(event);
+
+                    return true;
+                });
+
+                log.info("Event published transactionally: {}", event.getId());
 
             } catch (Exception e) {
                 log.error("Failed to publish event {}", event.getId(), e);
