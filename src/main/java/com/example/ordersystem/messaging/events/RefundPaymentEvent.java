@@ -11,7 +11,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InventoryReservedEvent {
+public class RefundPaymentEvent {
 
     private UUID orderId;
 }
