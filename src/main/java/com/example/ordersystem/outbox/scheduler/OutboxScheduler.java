@@ -26,13 +26,17 @@ public class OutboxScheduler {
 
         for (OutboxEvent event : events) {
 
-            log.info("Publishing event {}", event.getEventType());
+            try {
+                producer.sendOrderCreated(event.getPayload());
 
-            // Kafka producer
-            producer.sendOrderCreated(event.getPayload());
+                event.setPublished(true);
+                repository.save(event);
 
-            event.setPublished(true);
-            repository.save(event);
+                log.info("Event sent to Kafka: {}", event.getEventType());
+
+            } catch (Exception e) {
+                log.error("Failed to publish event {}", event.getId(), e);
+            }
         }
     }
 }
