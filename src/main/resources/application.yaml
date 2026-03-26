@@ -14,12 +14,33 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+
     producer:
       transaction-id-prefix: tx-
       acks: all
       retries: 3
       enable-idempotence: true
+
     consumer:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      max-poll-records: 10
+
+    listener:
+      concurrency: 3
+      ack-mode: record
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  metrics:
+    tags:
+      application: order-system
+
+logging:
+  level:
+    org.springframework.kafka: INFO

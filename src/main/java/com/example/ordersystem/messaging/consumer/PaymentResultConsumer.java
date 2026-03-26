@@ -58,6 +58,7 @@ public class PaymentResultConsumer {
 
         } catch (Exception e) {
             log.error("Failed to handle payment-failed", e);
+            throw new RuntimeException(e);
         }
     }
 }

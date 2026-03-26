@@ -56,6 +56,7 @@ public class InventoryResultConsumer {
 
         } catch (Exception e) {
             log.error("Failed to handle inventory-reserved", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -100,6 +101,7 @@ public class InventoryResultConsumer {
 
         } catch (Exception e) {
             log.error("Failed to handle inventory-failed", e);
+            throw new RuntimeException(e);
         }
     }
 }

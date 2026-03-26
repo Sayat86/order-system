@@ -28,6 +28,7 @@ public class RefundConsumer {
 
         } catch (Exception e) {
             log.error("Failed to process refund-payment event", e);
+            throw new RuntimeException(e);
         }
     }
 }

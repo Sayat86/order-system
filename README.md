@@ -3,22 +3,24 @@
 
 ## 🔥 Highlights
 
-- Exactly-once delivery with Kafka transactions
-- Saga orchestration with compensation
-- Transactional outbox pattern
-- Idempotent API (Stripe-like behavior)
+- Event-driven architecture with Apache Kafka
+- Saga choreography with compensation
+- Transactional Outbox pattern
+- Idempotent consumers (at-least-once safe)
+- Retry & Dead Letter Queue (DLQ)
+- Metrics & monitoring (Micrometer + Prometheus)
 
 ## 📌 Overview
 
-This project is a **production-style event-driven Order System** built with **Spring Boot, Kafka, and PostgreSQL**.
+This project is a production-style event-driven Order System built with Spring Boot, Kafka, and PostgreSQL.
 
-It demonstrates how to design **reliable distributed systems** with:
+It demonstrates how to build reliable distributed systems using:
 
 * Transactional Outbox Pattern
-* Saga Orchestration
-* Exactly-once delivery (Kafka)
-* Idempotent API
-* Retry & Dead Letter Queue (DLQ)
+* Saga (choreography-based)
+* Idempotent consumers
+* Retry & DLQ
+* Observability (metrics)
 
 ---
 
@@ -49,6 +51,7 @@ Client → Order API → Database (Order + Outbox)
 * Apache Kafka
 * Docker
 * Flyway
+* Micrometer + Prometheus
 
 ---
 
@@ -90,75 +93,100 @@ Problem: DB and Kafka are separate systems → risk of inconsistency.
 
 Solution:
 
-* Save event in DB (outbox table)
-* Scheduler publishes to Kafka
-* Transaction ensures atomicity
+* Save event to outbox_events table
+* Scheduler publishes events to Kafka
+* DB transaction guarantees atomicity
 
 ```
-DB write + Kafka publish = atomic
+DB write + event persistence = atomic
+Kafka publish = async (via scheduler)
 ```
 
 ---
 
-### 2. Exactly-Once Delivery
+### 2. Delivery Semantics
 
-Implemented using:
+This system uses:
 
-* Kafka transactions
-* Idempotent producer
-* Event IDs
-* Processed events table
+At-least-once delivery + idempotent consumers
+
+Implemented with:
+
+* EventEnvelope (eventId)
+* processed_events table
+* Idempotency checks in consumers
 
 Guarantees:
 
 * No lost events
-* No duplicate processing
+* Safe reprocessing
+* No duplicate side effects
 
 ---
 
-### 3. Saga Orchestration
+### 3. Saga (Choreography)
 
 Flow:
 
 ```
 OrderCreated
    ↓
-Payment
+PaymentCompleted
    ↓
-Inventory
-   ↓
-Success → Order COMPLETED
-Failure → Refund → Order FAILED
+InventoryReserved → Order COMPLETED
+        ↓
+InventoryFailed → Refund → Order FAILED
 ```
 
-Compensation example:
-
-```
-Inventory failed → trigger refund
-```
+Each service reacts to events independently (no central orchestrator)
 
 ---
 
-### 4. Idempotency (API level)
+### 4. Idempotency
 
-Prevents duplicate order creation:
+Consumer level
+* Each event has eventId
+* Stored in processed_events
+* Duplicate events are ignored
 
-* Client sends `Idempotency-Key`
-* Request hash is stored
+same event → processed once
+
+API level (Order creation)
+* Supports Idempotency-Key
 * Same request → same response
-
-Used in systems like:
-
-* Stripe
-* PayPal
+* Prevents duplicate orders
 
 ---
 
 ### 5. Retry & Dead Letter Queue
 
-* Automatic retries (Kafka)
-* Failed messages → DLQ
-* Prevents message loss
+* Automatic retries via Kafka
+* Configurable backoff
+* Failed messages → .DLT topics
+
+Example:
+
+payment-completed → payment-completed.DLT
+
+---
+
+### 6. Metrics & Monitoring
+
+Exposed via:
+
+/actuator/prometheus
+
+Metrics:
+
+* kafka.events.processed
+* kafka.events.failed
+* kafka.events.duration
+
+Stack:
+
+* Micrometer
+* Prometheus
+* Grafana
 
 ---
 
@@ -188,11 +216,11 @@ Order Status Updated
 
 ## 🛡 Reliability Features
 
-* Idempotent API
 * Idempotent consumers
 * Retry mechanism
 * DLQ
-* Saga state tracking
+* Saga compensation
+* Kafka message keys (ordering per orderId)
 
 ---
 
@@ -216,6 +244,17 @@ docker compose up -d
 http://localhost:8081
 ```
 
+### 4. Prometheus
+
+```
+http://localhost:9090
+```
+
+### 5. Grafana
+
+```
+http://localhost:3000
+```
 ---
 
 ## 🧪 Example Request
@@ -255,7 +294,7 @@ Handled with retry + DLQ.
 ## 📈 Future Improvements
 
 * OpenTelemetry (tracing)
-* Prometheus + Grafana (metrics)
+* Schema versioning for events
 * Separate microservices (Order / Payment / Inventory)
 * Kubernetes deployment
 
@@ -263,10 +302,10 @@ Handled with retry + DLQ.
 
 ## 💡 What This Project Demonstrates
 
-* Designing event-driven systems
-* Handling distributed consistency
-* Building fault-tolerant services
-* Applying real-world microservice patterns
+* Event-driven architecture
+* Distributed consistency
+* Fault-tolerant systems
+* Real-world backend patterns
 
 ---
 
@@ -275,9 +314,9 @@ Handled with retry + DLQ.
 This project is a **production-style backend system** that demonstrates:
 
 * Event-driven architecture
-* Exactly-once processing
-* Saga orchestration with compensation
-* Reliable and scalable design
+* Saga-based workflows
+* Reliable message processing
+* Observability and monitoring
 
 ---
 

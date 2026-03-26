@@ -48,6 +48,7 @@ public class OrderEventConsumer {
 
         } catch (Exception e) {
             log.error("Failed to process event", e);
+            throw new RuntimeException(e);
         }
     }
 }

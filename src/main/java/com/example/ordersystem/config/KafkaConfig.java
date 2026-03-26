@@ -17,10 +17,17 @@ public class KafkaConfig {
         DeadLetterPublishingRecoverer recoverer =
                 new DeadLetterPublishingRecoverer(template);
 
-        return new DefaultErrorHandler(
-                recoverer,
-                new FixedBackOff(2000L, 3)
+        FixedBackOff backOff = new FixedBackOff(2000L, 3);
+
+        DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, backOff);
+
+        // 🔥 логирование retry
+        handler.setRetryListeners((record, ex, deliveryAttempt) ->
+                System.out.println("Retry #" + deliveryAttempt +
+                        " for message: " + record.value())
         );
+
+        return handler;
     }
 
     @Bean
