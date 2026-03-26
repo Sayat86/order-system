@@ -20,13 +20,16 @@ public class Order {
     @GeneratedValue
     private UUID id;
 
+    @Column(name = "user_id")
     private UUID userId;
 
+    @Column(name = "total_amount")
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @Column(name = "created_at")
     private Instant createdAt;
 
 }

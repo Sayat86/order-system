@@ -59,9 +59,12 @@ public class PaymentConsumer {
 
                 kafkaTemplate.send(
                         "payment-completed",
-                        PaymentCompletedEvent.builder()
-                                .orderId(orderId)
-                                .build()
+                        orderId.toString(),
+                        objectMapper.writeValueAsString(
+                                PaymentCompletedEvent.builder()
+                                        .orderId(orderId)
+                                        .build()
+                        )
                 );
 
             } else {

@@ -20,7 +20,7 @@ public class IdempotencyService {
 
     public Optional<String> getCachedResponse(String key, String requestHash) {
 
-        return repository.findByKey(key)
+        return repository.findByIdempotencyKey(key)
                 .filter(record -> record.getRequestHash().equals(requestHash))
                 .map(IdempotencyKey::getResponse);
     }
@@ -33,7 +33,7 @@ public class IdempotencyService {
 
             IdempotencyKey entity = IdempotencyKey.builder()
                     .id(UUID.randomUUID())
-                    .key(key)
+                    .idempotencyKey(key)
                     .requestHash(requestHash)
                     .response(json)
                     .createdAt(Instant.now())

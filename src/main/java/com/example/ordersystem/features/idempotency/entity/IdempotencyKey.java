@@ -18,13 +18,15 @@ public class IdempotencyKey {
     @Id
     private UUID id;
 
-    @Column(unique = true, nullable = false)
-    private String key;
+    @Column(name = "idempotency_key", unique = true, nullable = false)
+    private String idempotencyKey;
 
+    @Column(name = "request_hash")
     private String requestHash;
 
-    @Column(columnDefinition = "jsonb")
+    @Column(name = "response_payload", columnDefinition = "jsonb")
     private String response;
 
+    @Column(name = "created_at")
     private Instant createdAt;
 }

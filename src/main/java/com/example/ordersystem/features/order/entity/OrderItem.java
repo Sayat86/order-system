@@ -19,6 +19,7 @@ public class OrderItem {
     @GeneratedValue
     private UUID id;
 
+    @Column(name = "product_id")
     private UUID productId;
 
     private Integer quantity;

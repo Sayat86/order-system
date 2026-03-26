@@ -19,15 +19,19 @@ public class OutboxEvent {
     @GeneratedValue
     private UUID id;
 
+    @Column(name = "aggregate_type")
     private String aggregateType;
 
+    @Column(name = "aggregate_id")
     private UUID aggregateId;
 
+    @Column(name = "event_type")
     private String eventType;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "jsonb")
     private String payload;
 
+    @Column(name = "created_at")
     private Instant createdAt;
 
     private boolean published;

@@ -2,7 +2,6 @@ package com.example.ordersystem.outbox.scheduler;
 
 import com.example.ordersystem.outbox.entity.OutboxEvent;
 import com.example.ordersystem.outbox.repository.OutboxEventRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,10 +18,9 @@ public class OutboxScheduler {
 
     private final OutboxEventRepository repository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ObjectMapper objectMapper;
 
     @Scheduled(fixedDelay = 5000)
-    @Transactional
+    @Transactional("transactionManager")
     public void publishEvents() {
 
         List<OutboxEvent> events =
@@ -32,17 +30,14 @@ public class OutboxScheduler {
 
             try {
 
-                kafkaTemplate.executeInTransaction(operations -> {
+                kafkaTemplate.send("order-created",
+                        event.getAggregateId().toString(),
+                        event.getPayload());
 
-                    operations.send("order-created", event.getPayload());
+                event.setPublished(true);
+                repository.save(event);
 
-                    event.setPublished(true);
-                    repository.save(event);
-
-                    return true;
-                });
-
-                log.info("Event published transactionally: {}", event.getId());
+                log.info("Event published: {}", event.getId());
 
             } catch (Exception e) {
                 log.error("Failed to publish event {}", event.getId(), e);
